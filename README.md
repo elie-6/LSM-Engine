@@ -18,11 +18,11 @@ This engine accepts `put(key, value)` and `get(key)` operations while guaranteei
 
 ---
 
-## Architecture
+## Flow Architecture
 ```
     +----------------+
     |   LSMEngine    |
-    |  (put/get/close)|
+    | (put/get/close)|
     +--------+-------+
              |
              v
@@ -37,12 +37,12 @@ This engine accepts `put(key, value)` and `get(key)` operations while guaranteei
     | (threshold N)  |
     +--------+-------+
              |
-      flush threshold reached
+   flush threshold reached
              v
     +----------------+
     |   SSTable      |  <- Immutable on-disk file
     | (sorted keys,  |     + WAL truncates (reset)
-    |  in-memory index)
+    |in-memory index)|
     +----------------+
 ```
 
