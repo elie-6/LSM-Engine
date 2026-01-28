@@ -18,7 +18,7 @@ This engine accepts `put(key, value)` and `get(key)` operations while guaranteei
 
 ---
 
-## Flow Architecture
+## Flow Architecture 
 ```
     +----------------+
     |   LSMEngine    |
