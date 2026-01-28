@@ -16,8 +16,6 @@ This engine accepts `put(key, value)` and `get(key)` operations while guaranteei
 4. **WAL replay** on startup to recover unflushed state
 5. **Binary-searchable SSTables** via in-memory sparse indexing
 
-The implementation follows **Option B truncation semantics**: SSTables are flushed and fsynced *before* the WAL is truncated, ensuring no acknowledged write can vanish after a crash.
-
 ---
 
 ## Tech Stack
@@ -31,7 +29,7 @@ The implementation follows **Option B truncation semantics**: SSTables are flush
 - `com.elie.lsm.sstable.SSTable` — immutable on-disk files with indexed binary search
 - `com.elie.lsm.engine.LSMEngine` — orchestration layer for put/get/flush/close
 
-**Design Philosophy**: Plain-text SSTable format (`key=value\n`) for transparency and educational clarity.
+**Design Philosophy**: Plain-text SSTable format (`key=value\n`) for transparency and clarity.
 
 ---
 
@@ -70,6 +68,7 @@ java -cp target/classes com.elie.lsm.MainCrashRead
 ### Run benchmarks
 ```bash
 # WAL-only
+
 java -cp target/classes com.elie.lsm.MainBenchmarkWrite
 
 # Full LSM (with MemTable flushes)
@@ -108,11 +107,11 @@ On MemTable flush:
 
 1. Write sorted SSTable to disk
 2. `flush()` + `sync()` the SSTable file
-3. **Only then** truncate WAL via `RandomAccessFile.setLength(0)` + sync
+3. **Only then**  WAL is truncated, ensuring no acknowledged write can vanish after a crash.
 
 **Crash recovery**: On startup, `wal.replay()` reconstructs the MemTable from any unflushed WAL entries.
 
-This ordering ensures that no acknowledged write can be lost after `close()` returns, assuming the OS honors `fsync` semantics.
+This ordering ensures that no acknowledged write can be lost after `close()` returns.
 
 ---
 
@@ -120,19 +119,25 @@ This ordering ensures that no acknowledged write can be lost after `close()` ret
 
 **WAL batching**: `fsync` is expensive. I batch writes and call `FileDescriptor.sync()` every N operations to balance durability and throughput.
 
+**MemTable flush threshold**: The in-memory MemTable holds entries until a configurable threshold. Flushing it to SSTables ensures sequential disk writes and sorted keys for fast retrieval.  
+
 **SSTable indexing**: On construction, I build an in-memory index of offsets and keys. Lookups use binary search, then `RandomAccessFile.seek(offset)` for direct access — avoiding full scans.
 
-**Option B semantics**: The WAL stream remains open during truncation. This allows continuous writes while maintaining the durability invariant.
+**Crash recovery**: On startup, WAL is replayed into MemTable before any reads, ensuring durability even if a crash happens before MemTable flush.  
 
----
+**Sorted key-value storage**: SSTables store keys in order. Combined with MemTable, this guarantees that `get()` returns the latest value efficiently.  
+
+**Benchmarking hooks**: Built-in benchmark mains let me measure WAL-only throughput vs full MemTable flush throughput. This shows real-world tradeoffs between speed and durability.  
+
+**Configurable durability**: `FSYNC_EVERY` and `MEMTABLE_THRESHOLD` are adjustable to demonstrate different durability-performance tradeoffs.  
+
+
 
 ## Known Limitations
 
 - **No compaction**: Multiple SSTables accumulate over time. Compaction would merge them and remove overwritten keys.
 - **Plain-text format**: SSTables use `key=value\n` for clarity. A binary format would reduce parsing overhead.
 - **Full in-memory index**: For larger datasets, sparse indexing + Bloom filters would reduce memory footprint and disk I/O.
-- **Single-threaded**: No concurrency control. Multi-threaded access would require synchronization.
-- **No checksums**: Real systems checksum WAL/SSTable pages to detect corruption.
 
 ---
 
@@ -149,6 +154,3 @@ These are the foundational concepts behind RocksDB, LevelDB, Cassandra, and HBas
 
 ---
 
-## License
-
-MIT — use it, break it, learn from it.
