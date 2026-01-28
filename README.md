@@ -29,7 +29,7 @@ This engine accepts `put(key, value)` and `get(key)` operations while guaranteei
 - `com.elie.lsm.sstable.SSTable` — immutable on-disk files with indexed binary search
 - `com.elie.lsm.engine.LSMEngine` — orchestration layer for put/get/flush/close
 
-**Design Philosophy**: Plain-text SSTable format (`key=value\n`) for transparency and clarity.
+**Design Format**: Plain-text SSTable format (`key=value\n`) for transparency and clarity.
 
 ---
 
@@ -47,7 +47,7 @@ src/main/java/com/elie/lsm/
   ├─ memtable/MemTable.java
   └─ sstable/SSTable.java
 
-data/                           # runtime: wal.log + segment_*.dat
+data/                           # runtime: wal.log + segment_*.dat (sstable)
 ```
 
 ---
