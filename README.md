@@ -129,7 +129,34 @@ This ordering ensures that no acknowledged write can be lost after `close()` ret
 
 6. **Benchmarking hooks**: Built-in benchmark mains let me measure WAL-only throughput vs full MemTable flush throughput. This shows real-world tradeoffs between speed and durability.  
 
-7. **Configurable durability**: `FSYNC_EVERY` and `MEMTABLE_THRESHOLD` are adjustable to demonstrate different durability-performance tradeoffs.  
+7. **Configurable durability**: `FSYNC_EVERY` and `MEMTABLE_THRESHOLD` are adjustable to demonstrate different durability-performance tradeoffs.
+
+
+       +----------------+
+      |   LSMEngine    |
+      |  (put/get/close)|
+      +--------+-------+
+               |
+               v
+      +----------------+
+      |      WAL       |  <- Append-only log with batched fsync
+      | (write/replay) |
+      +--------+-------+
+               |
+               v
+      +----------------+
+      |   MemTable     |  <- In-memory sorted map (TreeMap)
+      | (threshold N)  |
+      +--------+-------+
+               |
+        flush threshold reached
+               v
+      +----------------+
+      |   SSTable      |  <- Immutable on-disk file
+      | (sorted keys,  |     + WAL truncates (reset)
+      |  in-memory index)
+      +----------------+
+
 
 
 
