@@ -117,19 +117,19 @@ This ordering ensures that no acknowledged write can be lost after `close()` ret
 
 ## Design Highlights
 
-**WAL batching**: `fsync` is expensive. I batch writes and call `FileDescriptor.sync()` every N operations to balance durability and throughput.
+1. **WAL batching**: `fsync` is expensive. I batch writes and call `FileDescriptor.sync()` every N operations to balance durability and throughput.
 
-**MemTable flush threshold**: The in-memory MemTable holds entries until a configurable threshold. Flushing it to SSTables ensures sequential disk writes and sorted keys for fast retrieval.  
+2. **MemTable flush threshold**: The in-memory MemTable holds entries until a configurable threshold. Flushing it to SSTables ensures sequential disk writes and sorted keys for fast retrieval.  
 
-**SSTable indexing**: On construction, I build an in-memory index of offsets and keys. Lookups use binary search, then `RandomAccessFile.seek(offset)` for direct access — avoiding full scans.
+3. **SSTable indexing**: On construction, I build an in-memory index of offsets and keys. Lookups use binary search, then `RandomAccessFile.seek(offset)` for direct access — avoiding full scans.
 
-**Crash recovery**: On startup, WAL is replayed into MemTable before any reads, ensuring durability even if a crash happens before MemTable flush.  
+4. **Crash recovery**: On startup, WAL is replayed into MemTable before any reads, ensuring durability even if a crash happens before MemTable flush.  
 
-**Sorted key-value storage**: SSTables store keys in order. Combined with MemTable, this guarantees that `get()` returns the latest value efficiently.  
+5. **Sorted key-value storage**: SSTables store keys in order. Combined with MemTable, this guarantees that `get()` returns the latest value efficiently.  
 
-**Benchmarking hooks**: Built-in benchmark mains let me measure WAL-only throughput vs full MemTable flush throughput. This shows real-world tradeoffs between speed and durability.  
+6. **Benchmarking hooks**: Built-in benchmark mains let me measure WAL-only throughput vs full MemTable flush throughput. This shows real-world tradeoffs between speed and durability.  
 
-**Configurable durability**: `FSYNC_EVERY` and `MEMTABLE_THRESHOLD` are adjustable to demonstrate different durability-performance tradeoffs.  
+7. **Configurable durability**: `FSYNC_EVERY` and `MEMTABLE_THRESHOLD` are adjustable to demonstrate different durability-performance tradeoffs.  
 
 
 
