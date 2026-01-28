@@ -18,6 +18,36 @@ This engine accepts `put(key, value)` and `get(key)` operations while guaranteei
 
 ---
 
+## Architecture
+```
+    +----------------+
+    |   LSMEngine    |
+    |  (put/get/close)|
+    +--------+-------+
+             |
+             v
+    +----------------+
+    |      WAL       |  <- Append-only log with batched fsync
+    | (write/replay) |
+    +--------+-------+
+             |
+             v
+    +----------------+
+    |   MemTable     |  <- In-memory sorted map (TreeMap)
+    | (threshold N)  |
+    +--------+-------+
+             |
+      flush threshold reached
+             v
+    +----------------+
+    |   SSTable      |  <- Immutable on-disk file
+    | (sorted keys,  |     + WAL truncates (reset)
+    |  in-memory index)
+    +----------------+
+```
+
+---
+
 ## Tech Stack
 
 **Language**: Java 17 (Temurin)  
@@ -132,31 +162,7 @@ This ordering ensures that no acknowledged write can be lost after `close()` ret
 7. **Configurable durability**: `FSYNC_EVERY` and `MEMTABLE_THRESHOLD` are adjustable to demonstrate different durability-performance tradeoffs.
 
 
-       +----------------+
-      |   LSMEngine    |
-      |  (put/get/close)|
-      +--------+-------+
-               |
-               v
-      +----------------+
-      |      WAL       |  <- Append-only log with batched fsync
-      | (write/replay) |
-      +--------+-------+
-               |
-               v
-      +----------------+
-      |   MemTable     |  <- In-memory sorted map (TreeMap)
-      | (threshold N)  |
-      +--------+-------+
-               |
-        flush threshold reached
-               v
-      +----------------+
-      |   SSTable      |  <- Immutable on-disk file
-      | (sorted keys,  |     + WAL truncates (reset)
-      |  in-memory index)
-      +----------------+
-
+   
 
 
 
