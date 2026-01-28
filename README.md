@@ -2,7 +2,7 @@
 
 A **minimal, durable LSM-style storage engine** in Java, implementing the core fundamentals of modern write-optimized databases.
 
-Built from first principles to demonstrate the tradeoffs between durability, throughput, and read performance — no external libraries, just OS semantics and proper fsync ordering.
+Built from principles to demonstrate the tradeoffs between durability, throughput, and read performance — no external libraries, just OS semantics and proper fsync ordering.
 
 ---
 
