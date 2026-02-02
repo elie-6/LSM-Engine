@@ -178,7 +178,6 @@ This ordering ensures that no acknowledged write can be lost after `close()` ret
 
 This project demonstrates:
 
-- **Durability invariants**: Understanding when data is truly persistent (flush vs. fsync)
 - **Write amplification tradeoffs**: WAL + MemTable + SSTable = multiple writes per logical operation
 - **Read optimization**: Sorted SSTables + indexing enable efficient lookups despite disk storage
 - **Crash recovery**: Proper WAL replay guarantees consistency across failures
